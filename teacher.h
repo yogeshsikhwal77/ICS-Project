@@ -1,0 +1,1 @@
+void teacherMenu(Teacher t);
