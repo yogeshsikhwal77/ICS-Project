@@ -40,7 +40,7 @@ typedef struct {
 
 typedef struct {
     int id;
-    char messsage[200];
+    char message[200];
 } Announcement;
 
 typedef struct {

@@ -10,7 +10,7 @@ int save_students(const Student arr[], int count);
 
 int load_assignments(Assignment arr[], int max);
 int load_announcements(Announcement arr[], int max);
-int load_quiz(QuizQuestion arr[], int max);
+int load_quiz(quiz arr[], int max);
 
 Student* find_student(Student arr[], int count, int id);
 
