@@ -30,14 +30,17 @@ typedef struct {
 
 typedef struct {
     int id;
+    int studentId;
     char subject[50];
     char title[100];
     char deadline[20];
+    int submitted;
+    float marks;
 } Assignment;
 
 typedef struct {
     int id;
-    char messsage[200];
+    char message[200];
 } Announcement;
 
 typedef struct {
