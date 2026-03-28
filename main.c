@@ -1,53 +1,60 @@
 #include <stdio.h>
 #include "student.h"
 #include "file_handler.h"
+#include "structs.h"
+
+// Forward declarations (in case not in headers)
+int studentLogin(Student *s);
+int teacherLogin(Teacher *t);
+void studentMenu(int studentId);
+void teacherMenu(Teacher t);
 
 int main() {
-    int studentId;
     int choice;
 
     // Ensure data folder exists
     ensure_data_dir();
 
-    printf("===== Student Academic Management System =====\n");
-    printf("Enter Student ID: ");
-    scanf("%d", &studentId);
-
-    do {
-        printf("\n===== MENU =====\n");
-        printf("1. View Attendance\n");
-        printf("2. View Assignments\n");
-        printf("3. View Grades\n");
-        printf("4. View Announcements\n");
-        printf("5. Attempt Quiz\n");
-        printf("0. Exit\n");
+    while (1) {
+        printf("\n===== STUDENT ACADEMIC MANAGEMENT SYSTEM =====\n");
+        printf("1. Login as Student\n");
+        printf("2. Login as Teacher\n");
+        printf("3. Exit\n");
         printf("Enter choice: ");
         scanf("%d", &choice);
 
-        switch (choice) {
-            case 1:
-                view_attendance(studentId);
-                break;
-            case 2:
-                view_assignments(studentId);
-                break;
-            case 3:
-                view_grades(studentId);
-                break;
-            case 4:
-                view_announcements();
-                break;
-            case 5:
-                attempt_quiz(studentId);
-                break;
-            case 0:
-                printf("Exiting...\n");
-                break;
-            default:
-                printf("Invalid choice!\n");
-        }
+        if (choice == 1) {
+            Student s;
 
-    } while (choice != 0);
+            if (studentLogin(&s)) {
+                printf("\nLogin Successful! Welcome %s\n", s.name);
+
+                // 👇 use YOUR module
+                student_menu(s.id);
+            } else {
+                printf("Invalid Student Credentials!\n");
+            }
+        }
+        else if (choice == 2) {
+            Teacher t;
+
+            if (teacherLogin(&t)) {
+                printf("\nLogin Successful! Welcome %s\n", t.name);
+
+                // 👇 your friend’s module
+                teacherMenu(t);
+            } else {
+                printf("Invalid Teacher Credentials!\n");
+            }
+        }
+        else if (choice == 3) {
+            printf("Exiting program...\n");
+            break;
+        }
+        else {
+            printf("Invalid choice! Try again.\n");
+        }
+    }
 
     return 0;
 }

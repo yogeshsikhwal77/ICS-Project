@@ -141,3 +141,43 @@ void view_announcements(void) {
         printf("%d. %s\n", a[i].id, a[i].message);
     }
 }
+
+// Add this at the end of student.c
+
+void student_menu(int studentId) {
+    int choice;
+    while (1) {
+        printf("\n===== STUDENT MENU =====\n");
+        printf("1. View Attendance\n");
+        printf("2. View Assignments\n");
+        printf("3. View Grades\n");
+        printf("4. View Announcements\n");
+        printf("5. Attempt Quiz\n");
+        printf("0. Logout\n");
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                view_attendance(studentId);
+                break;
+            case 2:
+                view_assignments(studentId);
+                break;
+            case 3:
+                view_grades(studentId);
+                break;
+            case 4:
+                view_announcements();
+                break;
+            case 5:
+                attempt_quiz(studentId);
+                break;
+            case 0:
+                printf("Logging out...\n");
+                return;
+            default:
+                printf("Invalid choice! Try again.\n");
+        }
+    }
+}
