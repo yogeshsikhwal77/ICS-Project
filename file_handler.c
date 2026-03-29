@@ -13,7 +13,7 @@ static int ensure_file_parent_dir(void) {
 #else
     if (mkdir("data", 0777) == 0) return 1;
 #endif
-    return 1; // ok if already exists
+    return 1; // ok if already exist
 }
 
 int ensure_data_dir(void) {
