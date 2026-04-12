@@ -3,52 +3,77 @@
 #include <stdio.h>
 #include "structs.h"
 
-static float attendance_pct(const Student *s) {
-    if (!s || s->totalClasses <= 0) return 0.0f;
+static float attendance_pct(const Student *s)
+{
+    if (!s || s->totalClasses <= 0)
+        return 0.0f;
     return (100.0f * s->attendedClasses) / s->totalClasses;
 }
 
-static const char* grade_from_marks(float marks) {
-    if (marks >= 90) return "A";
-    if (marks >= 75) return "B";
-    if (marks >= 60) return "C";
-    if (marks >= 40) return "D";
+static const char *grade_from_marks(float marks)
+{
+    if (marks >= 90)
+        return "A";
+    if (marks >= 75)
+        return "B";
+    if (marks >= 60)
+        return "C";
+    if (marks >= 40)
+        return "D";
     return "Fail";
 }
 
-static void update_student_quiz_marks(int studentId, float marks) {
+static void update_student_quiz_marks(int studentId, float marks)
+{
     Student students[MAX_STUDENTS];
     int count = load_students(students, MAX_STUDENTS);
     Student *s = find_student(students, count, studentId);
-    if (!s) return;
+    if (!s)
+        return;
     s->quizMarks = marks;
     save_students(students, count);
 }
 
-void attempt_quiz(int studentId) {
-    quiz q[MAX_QUIZ]; 
+void attempt_quiz(int studentId)
+{
+    quiz q[MAX_QUIZ];
     int count = load_quiz(q, MAX_QUIZ);
 
-    if (count == 0) {
+    if (count == 0)
+    {
         printf("No quiz available.\n");
         return;
     }
 
     int score = 0;
 
+    // Inside attempt_quiz() before starting the loop:
+    Student students[MAX_STUDENTS];
+    int student_count = load_students(students, MAX_STUDENTS);
+    Student *s = find_student(students, student_count, studentId);
+
+    if (s && s->quizMarks > 0)
+    { // Or add a specific hasAttemptedQuiz flag
+        printf("You have already attempted the quiz! Your score: %.2f\n", s->quizMarks);
+        return;
+    }
+
     printf("\n--- Quiz ---\n");
-    for (int i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++)
+    {
         int answer;
         printf("\nQ%d) %s\n", i + 1, q[i].question);
 
-        for (int j = 0; j < MAX_OPTIONS; j++) {
+        for (int j = 0; j < MAX_OPTIONS; j++)
+        {
             printf("%d. %s\n", j + 1, q[i].option[j]);
         }
 
         printf("Your answer (1-4): ");
         scanf("%d", &answer);
 
-        if (answer == q[i].correctoption) {   // ✅ FIXED
+        if (answer == q[i].correctoption)
+        { // ✅ FIXED
             score++;
         }
     }
@@ -60,12 +85,68 @@ void attempt_quiz(int studentId) {
     update_student_quiz_marks(studentId, marks);
 }
 
-void view_attendance(int studentId) {
+// ----------- SUBMIT ASSIGNMENT -----------
+void submit_assignment(int studentId)
+{
+    Assignment a[MAX_ASSIGNMENT];
+    int count = load_assignments(a, MAX_ASSIGNMENT);
+    int found = 0;
+
+    printf("\n--- Pending Assignments ---\n");
+    for (int i = 0; i < count; i++)
+    {
+        if (a[i].studentId == studentId && a[i].submitted == 0)
+        {
+            printf("ID: %d | Subject: %s | Title: %s\n", a[i].id, a[i].subject, a[i].title);
+            found = 1;
+        }
+    }
+
+    if (!found)
+    {
+        printf("No pending assignments to submit.\n");
+        return;
+    }
+
+    int assignId;
+    printf("Enter Assignment ID to submit: ");
+    scanf("%d", &assignId);
+
+    int submitted_success = 0;
+    for (int i = 0; i < count; i++)
+    {
+        if (a[i].id == assignId && a[i].studentId == studentId)
+        {
+            a[i].submitted = 1; // Change submission status
+            submitted_success = 1;
+            break;
+        }
+    }
+
+    if (submitted_success)
+    {
+        FILE *fp = fopen(FILE_ASSIGNMENTS, "wb");
+        if (fp != NULL)
+        {
+            fwrite(a, sizeof(Assignment), count, fp);
+            fclose(fp);
+            printf("✅ Assignment submitted successfully!\n");
+        }
+    }
+    else
+    {
+        printf("❌ Invalid Assignment ID.\n");
+    }
+}
+
+void view_attendance(int studentId)
+{
     Student students[MAX_STUDENTS];
     int count = load_students(students, MAX_STUDENTS);
     Student *s = find_student(students, count, studentId);
 
-    if (!s) {
+    if (!s)
+    {
         printf("Student not found.\n");
         return;
     }
@@ -78,19 +159,23 @@ void view_attendance(int studentId) {
     printf("Attended Classes: %d\n", s->attendedClasses);
     printf("Attendance: %.2f%%\n", pct);
 
-    if (pct < 75.0f) {
+    if (pct < 75.0f)
+    {
         printf("Warning: Attendance below 75%%\n");
     }
 }
 
-void view_assignments(int studentId) {
-    Assignment a[MAX_ASSIGNMENT];   // ✅ FIXED
+void view_assignments(int studentId)
+{
+    Assignment a[MAX_ASSIGNMENT]; // ✅ FIXED
     int count = load_assignments(a, MAX_ASSIGNMENT);
     int found = 0;
 
     printf("\n--- Assignments ---\n");
-    for (int i = 0; i < count; i++) {
-        if (a[i].studentId == studentId) {
+    for (int i = 0; i < count; i++)
+    {
+        if (a[i].studentId == studentId)
+        {
             found = 1;
             printf("ID: %d\n", a[i].id);
             printf("Subject: %s\n", a[i].subject);
@@ -102,17 +187,20 @@ void view_assignments(int studentId) {
         }
     }
 
-    if (!found) {
+    if (!found)
+    {
         printf("No assignments found.\n");
     }
 }
 
-void view_grades(int studentId) {
+void view_grades(int studentId)
+{
     Student students[MAX_STUDENTS];
     int count = load_students(students, MAX_STUDENTS);
     Student *s = find_student(students, count, studentId);
 
-    if (!s) {
+    if (!s)
+    {
         printf("Student not found.\n");
         return;
     }
@@ -127,57 +215,67 @@ void view_grades(int studentId) {
     printf("Grade: %s\n", grade_from_marks(avg));
 }
 
-void view_announcements(void) {
+void view_announcements(void)
+{
     Announcement a[MAX_ANNOUNCEMENTS];
     int count = load_announcements(a, MAX_ANNOUNCEMENTS);
 
     printf("\n--- Announcements ---\n");
-    if (count == 0) {
+    if (count == 0)
+    {
         printf("No announcements yet.\n");
         return;
     }
 
-    for (int i = 0; i < count; i++) {
+    for (int i = 0; i < count; i++)
+    {
         printf("%d. %s\n", a[i].id, a[i].message);
     }
 }
 
 // Add this at the end of student.c
 
-void student_menu(int studentId) {
+void student_menu(int studentId)
+{
     int choice;
-    while (1) {
+    while (1)
+    {
         printf("\n===== STUDENT MENU =====\n");
         printf("1. View Attendance\n");
         printf("2. View Assignments\n");
         printf("3. View Grades\n");
         printf("4. View Announcements\n");
         printf("5. Attempt Quiz\n");
+        printf("6. Submit Assignment\n");
         printf("0. Logout\n");
         printf("Enter choice: ");
         scanf("%d", &choice);
 
-        switch (choice) {
-            case 1:
-                view_attendance(studentId);
-                break;
-            case 2:
-                view_assignments(studentId);
-                break;
-            case 3:
-                view_grades(studentId);
-                break;
-            case 4:
-                view_announcements();
-                break;
-            case 5:
-                attempt_quiz(studentId);
-                break;
-            case 0:
-                printf("Logging out...\n");
-                return;
-            default:
-                printf("Invalid choice! Try again.\n");
+        switch (choice)
+        {
+        case 1:
+            view_attendance(studentId);
+            break;
+        case 2:
+            view_assignments(studentId);
+            break;
+        case 3:
+            view_grades(studentId);
+            break;
+        case 4:
+            view_announcements();
+            break;
+        case 5:
+            attempt_quiz(studentId);
+            break;
+        case 6:
+            submit_assignment(studentId);
+            break;
+        case 0:
+            printf("Logging out...\n");
+            return;
+        default:
+            printf("Invalid choice! Try again.\n");
         }
     }
 }
