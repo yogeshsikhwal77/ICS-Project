@@ -7,14 +7,14 @@ int main() {
     ensure_data_dir();
 
     // 1. Create a dummy Student account
-    Student s1 = {101, "Yogesh Sikwal", 20, 18, 85.5f, 92.0f};
+    Student s1 = {101, "Yogesh Sikhwal", 20, 18, 85.5f, 92.0f};
     
     FILE *fs = fopen(FILE_STUDENTS, "wb");
     if (fs != NULL) {
         fwrite(&s1, sizeof(Student), 1, fs);
         fclose(fs);
         printf("✅ Student account created!\n");
-        printf("   -> ID: 101, Name: Yogesh Sikwal\n");
+        printf("   -> ID: 101, Name: Yogesh Sikhwal\n");
     } else {
         printf("❌ Failed to create student database.\n");
     }
