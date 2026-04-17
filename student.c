@@ -34,57 +34,64 @@ static void update_student_quiz_marks(int studentId, float marks)
     save_students(students, count);
 }
 
-void attempt_quiz(int studentId)
-{
+// student.c
+// student.c
+// student.c
+void attempt_quiz(int studentId) {
     quiz q[MAX_QUIZ];
     int count = load_quiz(q, MAX_QUIZ);
-
-    if (count == 0)
-    {
-        printf("No quiz available.\n");
-        return;
-    }
-
-    int score = 0;
-
-    // Inside attempt_quiz() before starting the loop:
+    
     Student students[MAX_STUDENTS];
     int student_count = load_students(students, MAX_STUDENTS);
     Student *s = find_student(students, student_count, studentId);
 
-    if (s && s->quizMarks > 0)
-    { // Or add a specific hasAttemptedQuiz flag
-        printf("You have already attempted the quiz! Your score: %.2f\n", s->quizMarks);
+    if (count == 0 || !s) {
+        printf("No new quizzes available.\n");
         return;
     }
 
-    printf("\n--- Quiz ---\n");
-    for (int i = 0; i < count; i++)
-    {
-        int answer;
-        printf("\nQ%d) %s\n", i + 1, q[i].question);
+    int new_questions_found = 0;
+    int correct_answers = 0;
+    int total_attempted_now = 0;
 
-        for (int j = 0; j < MAX_OPTIONS; j++)
-        {
-            printf("%d. %s\n", j + 1, q[i].option[j]);
-        }
+    printf("\n--- New Questions for You ---\n");
+    for (int i = 0; i < count; i++) {
+        // Only show questions the student hasn't seen yet
+        if (q[i].id > s->lastAttemptedQuestionId) {
+            new_questions_found = 1;
+            int answer;
 
-        printf("Your answer (1-4): ");
-        scanf("%d", &answer);
+            printf("\nQ%d) %s\n", q[i].id, q[i].question);
+            for (int j = 0; j < MAX_OPTIONS; j++) {
+                printf("%d. %s\n", j + 1, q[i].option[j]);
+            }
 
-        if (answer == q[i].correctoption)
-        { // ✅ FIXED
-            score++;
+            printf("Your answer (1-4): ");
+            scanf("%d", &answer);
+
+            if (answer == q[i].correctoption) {
+                correct_answers++;
+            }
+            
+            total_attempted_now++;
+            // Update the last attempted ID to this question
+            s->lastAttemptedQuestionId = q[i].id;
         }
     }
 
-    float marks = (100.0f * score) / count;
-    printf("\nQuiz Score: %d/%d\n", score, count);
-    printf("Quiz Marks: %.2f\n", marks);
+    if (!new_questions_found) {
+        printf("You are all caught up! No new questions from the teacher.\n");
+        return;
+    }
 
-    update_student_quiz_marks(studentId, marks);
+    // Update marks: cumulative logic or per-session
+    // Example: adding new marks to existing total
+    float session_marks = (100.0f * correct_answers) / total_attempted_now;
+    s->quizMarks = (s->quizMarks + session_marks) / 2.0f; 
+
+    save_students(students, student_count);
+    printf("\n✅ Progress saved! Your new average score: %.2f\n", s->quizMarks);
 }
-
 // ----------- SUBMIT ASSIGNMENT -----------
 void submit_assignment(int studentId)
 {
@@ -193,44 +200,50 @@ void view_assignments(int studentId)
     }
 }
 
-void view_grades(int studentId)
-{
-    Student students[MAX_STUDENTS];
-    int count = load_students(students, MAX_STUDENTS);
-    Student *s = find_student(students, count, studentId);
-
-    if (!s)
-    {
-        printf("Student not found.\n");
-        return;
-    }
-
-    float total = s->assignmentMarks + s->quizMarks;
-    float avg = total / 2.0f;
-
-    printf("\n--- Grades ---\n");
-    printf("Assignment Marks: %.2f\n", s->assignmentMarks);
-    printf("Quiz Marks: %.2f\n", s->quizMarks);
-    printf("Average: %.2f\n", avg);
-    printf("Grade: %s\n", grade_from_marks(avg));
-}
-
-void view_announcements(void)
-{
+void view_announcements(void) {
     Announcement a[MAX_ANNOUNCEMENTS];
     int count = load_announcements(a, MAX_ANNOUNCEMENTS);
 
     printf("\n--- Announcements ---\n");
-    if (count == 0)
-    {
-        printf("No announcements yet.\n");
+    if (count == 0) {
+        printf("No new announcements from the teacher.\n");
         return;
     }
 
-    for (int i = 0; i < count; i++)
-    {
-        printf("%d. %s\n", a[i].id, a[i].message);
+    for (int i = 0; i < count; i++) {
+        printf("ID: %d\n", a[i].id);
+        printf("Message: %s\n", a[i].message);
+        printf("--------------------------------------------------\n");
     }
+}
+
+void view_grades(int studentId) {
+    FILE *fp = fopen("data/grades.dat", "rb");
+    if (fp == NULL) {
+        printf("\nNo grades have been published yet.\n");
+        return;
+    }
+
+    StudentGrade sg;
+    int found = 0;
+
+    printf("\n--- Your Subject Grades ---\n");
+    printf("%-20s | %s\n", "SUBJECT", "GRADE");
+    printf("------------------------------- \n");
+
+    // Read through the file and print grades that match this student's ID
+    while (fread(&sg, sizeof(StudentGrade), 1, fp)) {
+        if (sg.studentId == studentId) {
+            printf("%-20s |   %c\n", sg.subject, sg.grade);
+            found = 1;
+        }
+    }
+    fclose(fp);
+
+    if (!found) {
+        printf("No grades have been assigned to your ID yet.\n");
+    }
+    printf("------------------------------- \n");
 }
 
 // Add this at the end of student.c
@@ -249,7 +262,15 @@ void student_menu(int studentId)
         printf("6. Submit Assignment\n");
         printf("0. Logout\n");
         printf("Enter choice: ");
-        scanf("%d", &choice);
+        
+        // Check if scanf successfully read exactly 1 integer
+        if (scanf("%d", &choice) != 1) 
+        {
+            // Clear the invalid input from the buffer
+            while (getchar() != '\n'); 
+            printf("Invalid input! Please enter a valid number.\n");
+            continue; // Skip the switch statement and show the menu again
+        }
 
         switch (choice)
         {

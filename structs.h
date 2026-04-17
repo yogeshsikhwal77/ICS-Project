@@ -17,15 +17,18 @@
 typedef struct {
     int id;
     char name[50];
+    char password[50];
     int totalClasses;
     int attendedClasses;
     float assignmentMarks;
     float quizMarks;
+    int lastAttemptedQuestionId;
 } Student;
 
 typedef struct {
     int id;
     char name[50];
+    char password[50];
 } Teacher;
 
 typedef struct {
@@ -49,4 +52,10 @@ typedef struct {
     char option[MAX_OPTIONS][100];
     int correctoption;
 } quiz;
+
+typedef struct {
+    int studentId;
+    char subject[50];
+    char grade; // Stores 'A', 'B', 'C', 'D', 'E', or 'F'
+} StudentGrade;
 #endif 

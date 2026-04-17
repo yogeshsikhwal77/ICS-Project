@@ -108,33 +108,36 @@ void makeAnnouncement() {
 }
 
 // ----------- ADD QUIZ -----------
+// teacher.c
+// teacher.c
 void addQuiz() {
-    FILE *fp = fopen(FILE_QUIZ, "ab");
+    FILE *fp = fopen(FILE_QUIZ, "ab"); // 'ab' appends new questions to the end
+    if (fp == NULL) return;
 
-    if (fp == NULL) {
-        printf("Error opening quiz file!\n");
-        return;
+    int numQuestions;
+    printf("How many questions do you want to add? ");
+    scanf("%d", &numQuestions);
+
+    for (int k = 0; k < numQuestions; k++) {
+        quiz q;
+        printf("\n--- Question %d ---\n", k + 1);
+        printf("Enter Quiz ID: ");
+        scanf("%d", &q.id);
+        printf("Enter Question: ");
+        scanf(" %[^\n]", q.question);
+
+        for (int i = 0; i < MAX_OPTIONS; i++) {
+            printf("Enter Option %d: ", i + 1);
+            scanf(" %[^\n]", q.option[i]);
+        }
+
+        printf("Enter Correct Option (1-4): ");
+        scanf("%d", &q.correctoption);
+
+        fwrite(&q, sizeof(quiz), 1, fp);
     }
-
-    quiz q;
-    printf("Enter Quiz ID: ");
-    scanf("%d", &q.id);
-
-    printf("Enter Question: ");
-    scanf(" %[^\n]", q.question);
-
-    for (int i = 0; i < MAX_OPTIONS; i++) {
-        printf("Enter Option %d: ", i + 1);
-        scanf(" %[^\n]", q.option[i]);
-    }
-
-    printf("Enter Correct Option (1-%d): ", MAX_OPTIONS);
-    scanf("%d", &q.correctoption);
-
-    fwrite(&q, sizeof(quiz), 1, fp);
     fclose(fp);
-
-    printf("Quiz added successfully!\n");
+    printf("\n✅ %d Questions added successfully!\n", numQuestions);
 }
 
 // ----------- ADD STUDENT -----------
@@ -159,6 +162,9 @@ void addStudent() {
 
     printf("Enter Student Name: ");
     scanf(" %[^\n]", s.name);
+
+    printf("Enter Student Password: ");
+    scanf(" %[^\n]", s.password);
 
     // Initialize default values for the new student
     s.totalClasses = 0;
@@ -188,63 +194,27 @@ void viewAllStudents() {
     }
 }
 
-// ----------- GRADE ASSIGNMENTS -----------
-void gradeAssignments() {
-    Assignment a[MAX_ASSIGNMENT];
-    int count = load_assignments(a, MAX_ASSIGNMENT); 
+void grade() {
+    StudentGrade sg;
     
-    if (count == 0) {
-        printf("No assignments found in the database.\n");
-        return;
-    }
-
-    int assignId, stuId;
-    printf("Enter Assignment ID to grade: ");
-    scanf("%d", &assignId);
+    printf("\n--- Direct Grade Entry ---\n");
+    printf("Enter Student ID: ");
+    scanf("%d", &sg.studentId);
     
-    printf("Enter Student ID to grade: ");
-    scanf("%d", &stuId);
+    printf("Enter Subject Name: ");
+    scanf(" %[^\n]", sg.subject); // The space before % allows reading strings with spaces
+    
+    printf("Enter Grade (A, B, C, D, E, F): ");
+    scanf(" %c", &sg.grade); // The space before % ignores extra newlines
 
-    int found = 0;
-    for (int i = 0; i < count; i++) {
-        // Now checks for BOTH Assignment ID and Student ID
-        if (a[i].id == assignId && a[i].studentId == stuId) { 
-            found = 1;
-            
-            if (a[i].submitted == 0) {
-                printf("⚠️ Student has not submitted this assignment yet!\n");
-                return;
-            }
-
-            printf("Grading Assignment: %s (Student ID: %d)\n", a[i].title, a[i].studentId);
-            
-            printf("Enter marks for this assignment: ");
-            scanf("%f", &a[i].marks);
-
-            Student students[MAX_STUDENTS];
-            int sCount = load_students(students, MAX_STUDENTS);
-            Student *s = find_student(students, sCount, a[i].studentId);
-            
-            if (s != NULL) {
-                s->assignmentMarks += a[i].marks; 
-                save_students(students, sCount);
-                printf("✅ Student grades updated successfully!\n");
-            } else {
-                printf("❌ Error: Target student ID not found in database.\n");
-            }
-            
-            break;
-        }
-    }
-
-    if (!found) {
-        printf("❌ Assignment ID or Student ID not found.\n");
+    // Save directly to a new file called grades.dat
+    FILE *fp = fopen("data/grades.dat", "ab");
+    if (fp != NULL) {
+        fwrite(&sg, sizeof(StudentGrade), 1, fp);
+        fclose(fp);
+        printf("✅ Grade '%c' for '%s' added successfully to Student %d!\n", sg.grade, sg.subject, sg.studentId);
     } else {
-        FILE *fp = fopen(FILE_ASSIGNMENTS, "wb");
-        if (fp != NULL) {
-            fwrite(a, sizeof(Assignment), count, fp);
-            fclose(fp);
-        }
+        printf("❌ Error saving grade. Ensure the 'data' folder exists.\n");
     }
 }
 
@@ -261,7 +231,7 @@ void teacherMenu(Teacher t) {
         printf("4. Add Quiz\n");
         printf("5. Add New Student\n");
         printf("6. View All Students\n");
-        printf("7. Grade Assignment\n");
+        printf("7. Grade \n");
         printf("0. Logout\n");
         printf("Enter choice: ");
         scanf("%d", &choice);
@@ -273,7 +243,7 @@ void teacherMenu(Teacher t) {
             case 4: addQuiz(); break;
             case 5: addStudent(); break;
             case 6: viewAllStudents(); break;
-            case 7: gradeAssignments(); break;
+            case 7: grade(); break;
             case 0:
                 printf("Logging out...\n");
                 return;
