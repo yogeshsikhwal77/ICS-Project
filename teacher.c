@@ -21,12 +21,24 @@ void markAttendance() {
 
     Student *s = find_student(students, count, sId);
     if (s != NULL) {
-        printf("Enter Total Classes: ");
-        scanf("%d", &s->totalClasses);
-
-        printf("Enter Attended Classes: ");
-        scanf("%d", &s->attendedClasses);
-
+        while(1){
+            printf("Enter Total Classes: ");
+            scanf("%d", &s->totalClasses);
+            if(s->totalClasses < 0){
+                printf("\ninvaild input");
+            }else{
+                break;
+            }
+        }
+        while(1){
+            printf("Enter Attended Classes: ");
+            scanf("%d", &s->attendedClasses);
+            if(s->attendedClasses > s->totalClasses || s->attendedClasses < 0){
+                printf("\nInvaild Input\n");
+            }else{
+                break;
+            }
+        }
         save_students(students, count);
         printf("Attendance updated successfully!\n");
     } else {
@@ -81,7 +93,7 @@ void addAssignment() {
     }
 
     fclose(fp);
-    printf("✅ Assignment '%s' added successfully for ALL %d students!\n", title, sCount);
+    printf("Assignment '%s' added successfully for ALL %d students!\n", title, sCount);
 }
 
 // ----------- MAKE ANNOUNCEMENT -----------
@@ -115,9 +127,13 @@ void addQuiz() {
     if (fp == NULL) return;
 
     int numQuestions;
-    printf("How many questions do you want to add? ");
-    scanf("%d", &numQuestions);
-
+    while(1){
+        printf("How many questions do you want to add? ");
+        scanf("%d", &numQuestions);
+        if(numQuestions<1){
+            printf("\ninvaild input\n");
+        }else break;
+    }
     for (int k = 0; k < numQuestions; k++) {
         quiz q;
         printf("\n--- Question %d ---\n", k + 1);
@@ -131,13 +147,18 @@ void addQuiz() {
             scanf(" %[^\n]", q.option[i]);
         }
 
-        printf("Enter Correct Option (1-4): ");
+        while(1){printf("\nEnter Correct Option (1-4): \n");
         scanf("%d", &q.correctoption);
+        if(q.correctoption > 4 || q.correctoption < 1){
+            printf("\ninvaild option\n");
+
+        }else break;
+        }
 
         fwrite(&q, sizeof(quiz), 1, fp);
     }
     fclose(fp);
-    printf("\n✅ %d Questions added successfully!\n", numQuestions);
+    printf("\n%d Questions added successfully!\n", numQuestions);
 }
 
 // ----------- ADD STUDENT -----------
@@ -171,6 +192,7 @@ void addStudent() {
     s.attendedClasses = 0;
     s.assignmentMarks = 0.0f;
     s.quizMarks = 0.0f;
+    s.lastAttemptedQuestionId = 0;
 
     students[count] = s;
     save_students(students, count + 1);
@@ -204,17 +226,21 @@ void grade() {
     printf("Enter Subject Name: ");
     scanf(" %[^\n]", sg.subject); // The space before % allows reading strings with spaces
     
-    printf("Enter Grade (A, B, C, D, E, F): ");
-    scanf(" %c", &sg.grade); // The space before % ignores extra newlines
-
+    while(1){
+        printf("Enter Grade (A, B, C, D, E, F): ");
+        scanf(" %c", &sg.grade); // The space before % ignores extra newlines
+        if(sg.grade<65 || sg.grade>70){
+            printf("invaild input\n");
+        }else break;
+    }
     // Save directly to a new file called grades.dat
     FILE *fp = fopen("data/grades.dat", "ab");
     if (fp != NULL) {
         fwrite(&sg, sizeof(StudentGrade), 1, fp);
         fclose(fp);
-        printf("✅ Grade '%c' for '%s' added successfully to Student %d!\n", sg.grade, sg.subject, sg.studentId);
+        printf("Grade '%c' for '%s' added successfully to Student %d!\n", sg.grade, sg.subject, sg.studentId);
     } else {
-        printf("❌ Error saving grade. Ensure the 'data' folder exists.\n");
+        printf("Error saving grade. Ensure the 'data' folder exists.\n");
     }
 }
 

@@ -6,7 +6,6 @@
 // ================= LOGIN FUNCTIONS =================
 
 // Student Login
-// Student Login
 int studentLogin(Student *s) {
     // FIXED: Using FILE_STUDENTS macro so it looks in the "data" folder
     FILE *fp = fopen(FILE_STUDENTS, "rb");

@@ -10,32 +10,8 @@ static float attendance_pct(const Student *s)
     return (100.0f * s->attendedClasses) / s->totalClasses;
 }
 
-static const char *grade_from_marks(float marks)
-{
-    if (marks >= 90)
-        return "A";
-    if (marks >= 75)
-        return "B";
-    if (marks >= 60)
-        return "C";
-    if (marks >= 40)
-        return "D";
-    return "Fail";
-}
 
-static void update_student_quiz_marks(int studentId, float marks)
-{
-    Student students[MAX_STUDENTS];
-    int count = load_students(students, MAX_STUDENTS);
-    Student *s = find_student(students, count, studentId);
-    if (!s)
-        return;
-    s->quizMarks = marks;
-    save_students(students, count);
-}
 
-// student.c
-// student.c
 // student.c
 void attempt_quiz(int studentId) {
     quiz q[MAX_QUIZ];
@@ -66,9 +42,15 @@ void attempt_quiz(int studentId) {
                 printf("%d. %s\n", j + 1, q[i].option[j]);
             }
 
-            printf("Your answer (1-4): ");
-            scanf("%d", &answer);
-
+            while(1){
+                printf("Your answer (1-4): ");
+                scanf("%d", &answer);
+                if(answer > 4 || answer < 1){
+                    printf("invaild input\n");
+                }else{
+                    break;
+                }
+            }
             if (answer == q[i].correctoption) {
                 correct_answers++;
             }
@@ -90,7 +72,7 @@ void attempt_quiz(int studentId) {
     s->quizMarks = (s->quizMarks + session_marks) / 2.0f; 
 
     save_students(students, student_count);
-    printf("\n✅ Progress saved! Your new average score: %.2f\n", s->quizMarks);
+    printf("\n Progress saved! Your new average score: %.2f\n", s->quizMarks);
 }
 // ----------- SUBMIT ASSIGNMENT -----------
 void submit_assignment(int studentId)
@@ -137,12 +119,12 @@ void submit_assignment(int studentId)
         {
             fwrite(a, sizeof(Assignment), count, fp);
             fclose(fp);
-            printf("✅ Assignment submitted successfully!\n");
+            printf("Assignment submitted successfully!\n");
         }
     }
     else
     {
-        printf("❌ Invalid Assignment ID.\n");
+        printf("Invalid Assignment ID.\n");
     }
 }
 
@@ -174,7 +156,7 @@ void view_attendance(int studentId)
 
 void view_assignments(int studentId)
 {
-    Assignment a[MAX_ASSIGNMENT]; // ✅ FIXED
+    Assignment a[MAX_ASSIGNMENT]; 
     int count = load_assignments(a, MAX_ASSIGNMENT);
     int found = 0;
 
